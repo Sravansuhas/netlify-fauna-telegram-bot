@@ -7,9 +7,6 @@ bot.start((ctx) => {
     return startAction(ctx);
 });
 
-bot.hello((ctx) => {
-    return "Hello";
-});
 
 exports.handler = async(event) => {
     try {
