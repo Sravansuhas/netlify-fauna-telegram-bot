@@ -14,15 +14,33 @@ bot.on("inline_query", (ctx) => {
 });
  */
 
-bot.use(async(ctx, next) => {
-    const start = new Date()
-    await next()
-    const ms = new Date() - start
-    console.log('Response time: %sms', ms)
-})
+bot.on("inline_query", async({ inlineQuery, answerInlineQuery }) => {
+    const apiUrl = `http://recipepuppy.com/api/?q=${inlineQuery.query}`;
+    const response = await fetch(apiUrl);
+    const { results } = await response.json();
+    const recipes = results
+        .filter(({ thumbnail }) => thumbnail)
+        .map(({ title, href, thumbnail }) => ({
+            type: "article",
+            id: thumbnail,
+            title: title,
+            description: title,
+            thumb_url: thumbnail,
+            input_message_content: {
+                message_text: title,
+            },
+            reply_markup: Markup.inlineKeyboard([
+                Markup.urlButton("Go to recipe", href),
+            ]),
+        }));
+    return answerInlineQuery(recipes);
+});
 
-bot.on('text', (ctx) => ctx.reply('Hello World'))
-bot.launch()
+bot.on("chosen_inline_result", ({ chosenInlineResult }) => {
+    console.log("chosen inline result", chosenInlineResult);
+});
+
+bot.launch();
 
 exports.handler = async(event) => {
     try {
